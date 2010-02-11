@@ -7,8 +7,8 @@ the lookup is happening, because it calls out to the native libc resolver code. 
 DNS server can cause your entire Ruby process to grind to a halt.  Ruby comes with a pure
 Ruby replacement that is not loaded by default:
 
-require 'resolv'
-require 'resolv-replace'
+    require 'resolv'
+    require 'resolv-replace'
 
 'resolv' is the pure Ruby DNS resolver.  'resolv-replace' monkeypatches the various Ruby
 Socket objects to use resolv.  This gem monkeypatches the monkeypatch so that the Socket
