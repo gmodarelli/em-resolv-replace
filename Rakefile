@@ -5,12 +5,12 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "em-resolv-replace"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{EventMachine-aware DNS lookup for Ruby}
     gem.email = "mperham@gmail.com"
     gem.homepage = "http://github.com/mperham/em-resolv-replace"
     gem.authors = ["Mike Perham"]
-    gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
+    gem.add_development_dependency "shoulda", ">= 2.10.3"
+    gem.add_development_dependency "mocha", ">= 0.9.8"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
