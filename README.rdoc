@@ -12,7 +12,7 @@ Ruby replacement that is not loaded by default:
 
 'resolv' is the pure Ruby DNS resolver.  'resolv-replace' monkeypatches the various Ruby
 Socket objects to use resolv.  This gem monkeypatches the monkeypatch so that the Socket
-classes will use an EventMachine-aware resolver, em-dns-resolver.=
+classes will use an EventMachine-aware resolver, em-dns-resolver.
 
 == Requirements
 
