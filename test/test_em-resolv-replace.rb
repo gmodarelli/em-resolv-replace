@@ -40,4 +40,16 @@ class TestEmResolvReplace < Test::Unit::TestCase
     end
   end
 
+  should "resolve localhost with eventmachine" do
+    Resolv.any_instance.expects(:orig_getaddresses).times(0)
+
+    EM.run do
+      Fiber.new do
+        results = Resolv.getaddresses('localhost')
+        assert (results.first =~ IPv4 || results.first =~ /::/), "Invalid IP #{results}"
+        EM.stop
+      end.resume
+    end
+  end
+
 end
