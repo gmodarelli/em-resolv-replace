@@ -8,7 +8,12 @@ module EventMachine
     ##
 
     def self.resolve(hostname)
-      Request.new(socket, hostname)
+      if ::Resolv::AddressRegex =~ hostname
+        # hostname contains an IP address, nothing to resolve
+        Request.new(nil, hostname)
+      else
+        Request.new(socket, hostname)
+      end
     end
 
     def self.socket
@@ -110,6 +115,12 @@ module EventMachine
         EM.next_tick { tick }
       end
       def tick
+        # @hostname contains an IP address
+        if @socket.nil?
+          succeed @hostname
+          return
+        end
+
         # Break early if nothing to do
         return if @last_send + @retry_interval > Time.now
 
