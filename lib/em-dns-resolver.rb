@@ -117,7 +117,7 @@ module EventMachine
       def tick
         # @hostname contains an IP address
         if @socket.nil?
-          succeed @hostname
+          succeed [ @hostname ]
           return
         end
 

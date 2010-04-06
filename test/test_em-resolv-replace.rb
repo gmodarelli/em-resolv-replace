@@ -56,9 +56,9 @@ class TestEmResolvReplace < Test::Unit::TestCase
     EM.run do
       Fiber.new do
         results = Resolv.getaddresses('127.0.0.1') # IPv4
-        assert (results == '127.0.0.1')
+        assert (results.first == '127.0.0.1')
         results = Resolv.getaddresses('::1') # IPv6
-        assert (results == '::1')
+        assert (results.first == '::1')
         EM.stop
       end.resume
     end
