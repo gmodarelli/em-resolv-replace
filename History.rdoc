@@ -1,0 +1,11 @@
+= 1.1.1
+
+Handle lookups for numeric IPs gracefully. (UVSoft)
+
+= 1.1.0
+
+Add support for local /etc/hosts file.
+
+= 1.0.0
+
+Initial release with Phat.
