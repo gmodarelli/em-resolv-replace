@@ -20,18 +20,38 @@ class Resolv
     EM.reactor_running? ? em_getaddresses(host) : orig_getaddresses(host)
   end
 
+  alias :orig_getname :getname
+
+  def getname(address)
+    EM.reactor_running? ? em_getnames(address)[0] : orig_getname(address)
+  end
+
+  alias :orig_getnames :getnames
+
+  def getnames(address)
+    EM.reactor_running? ? em_getnames(address) : orig_getnames(address)
+  end
+
   private
 
   def em_getaddresses(host)
+    em_request(host, :each_address, :resolve)
+  end
+
+  def em_getnames(address)
+    em_request(address, :each_name, :reverse)
+  end
+
+  def em_request(value, hosts_method, resolv_method)
     # Lookup in /etc/hosts
-    x = []
+    result = []
     @hosts ||= Resolv::Hosts.new
-    @hosts.each_address(host) {|addr| x << addr.to_s }
-    return x unless x.empty?
+    @hosts.send(hosts_method, value) { |x| result << x.to_s }
+    return result unless result.empty?
 
     # Nothing, hit DNS
     fiber = Fiber.current
-    df = EM::DnsResolver.resolve(host)
+    df = EM::DnsResolver.send(resolv_method, value)
     df.callback do |a|
       fiber.resume(a)
     end

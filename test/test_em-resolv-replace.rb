@@ -64,4 +64,20 @@ class TestEmResolvReplace < Test::Unit::TestCase
     end
   end
 
+  should "reverse hostname without eventmachine" do
+    Resolv.any_instance.expects(:em_getname).times(0)
+
+    assert_equal 'localhost', Resolv.getname('127.0.0.1')
+  end
+
+  should "reverse hostname with eventmachine" do
+    Resolv.any_instance.expects(:orig_getname).times(0)
+
+    EM.run do
+      Fiber.new do
+        assert_equal 'localhost', Resolv.getname('127.0.0.1')
+        EM.stop
+      end.resume
+    end
+  end
 end

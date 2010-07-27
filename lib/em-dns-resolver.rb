@@ -8,12 +8,25 @@ module EventMachine
     ##
 
     def self.resolve(hostname)
+      type = Resolv::DNS::Resource::IN::A
       if ::Resolv::AddressRegex =~ hostname
         # hostname contains an IP address, nothing to resolve
-        Request.new(nil, hostname)
+        Request.new(nil, hostname, type)
       else
-        Request.new(socket, hostname)
+        Request.new(socket, hostname, type)
       end
+    end
+
+    def self.reverse(address)
+      case address
+      when Resolv::IPv4::Regex
+        ptr = Resolv::IPv4.create(address).to_name
+      when Resolv::IPv6::Regex
+        ptr = Resolv::IPv6.create(address).to_name
+      else
+        raise ArgumentError, "invalid address: #{address}"
+      end
+      Request.new(socket, ptr, Resolv::DNS::Resource::IN::PTR)
     end
 
     def self.socket
@@ -105,9 +118,10 @@ module EventMachine
       include Deferrable
       attr_accessor :retry_interval
       attr_accessor :max_tries
-      def initialize(socket, hostname)
+      def initialize(socket, value, type)
         @socket = socket
-        @hostname = hostname
+        @value = value
+        @type = type
         @tries = 0
         @last_send = Time.at(0)
         @retry_interval = 3
@@ -115,9 +129,9 @@ module EventMachine
         EM.next_tick { tick }
       end
       def tick
-        # @hostname contains an IP address
+        # @value already contains the response
         if @socket.nil?
-          succeed [ @hostname ]
+          succeed [ @value ]
           return
         end
 
@@ -132,17 +146,19 @@ module EventMachine
       end
       # Called by DnsSocket#receive_data
       def receive_answer(msg)
-        addrs = []
+        result = []
         msg.each_answer do |name,ttl,data|
-          if data.kind_of?(Resolv::DNS::Resource::IN::A) ||
-              data.kind_of?(Resolv::DNS::Resource::IN::AAAA)
-            addrs << data.address.to_s
+          case data
+          when Resolv::DNS::Resource::IN::A, Resolv::DNS::Resource::IN::AAAA
+            result << data.address.to_s
+          when Resolv::DNS::Resource::IN::PTR
+            result << data.name.to_s
           end
         end
-        if addrs.empty?
+        if result.empty?
           fail "rcode=#{msg.rcode}"
         else
-          succeed addrs
+          succeed result
         end
       end
       private
@@ -165,7 +181,7 @@ module EventMachine
         msg = Resolv::DNS::Message.new
         msg.id = id
         msg.rd = 1
-        msg.add_question @hostname, Resolv::DNS::Resource::IN::A
+        msg.add_question @value, @type
         msg
       end
     end
