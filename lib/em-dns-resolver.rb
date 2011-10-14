@@ -43,7 +43,7 @@ module EventMachine
     def self.nameserver
       unless defined?(@nameserver)
         IO::readlines('/etc/resolv.conf').each do |line|
-          if line =~ /^nameserver (.+)$/
+          if line =~ /^nameserver\s+(.+)$/
             @nameserver = $1.split(/\s+/).first
           end
         end
