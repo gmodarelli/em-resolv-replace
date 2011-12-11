@@ -1,3 +1,7 @@
+= 1.1.2
+
+Gracefully handle whitespace in /etc/resolv.conf (troy)
+
 = 1.1.1
 
 Handle lookups for numeric IPs gracefully. (UVSoft)
