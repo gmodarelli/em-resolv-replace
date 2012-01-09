@@ -1,6 +1,6 @@
-# Standard libc DNS resolution
+# Pure Ruby DNS resolution
 require 'resolv'
-# Override with pure Ruby DNS resolution
+# Override sockets to use Ruby DNS resolution
 require 'resolv-replace'
 
 require 'em-dns-resolver'
