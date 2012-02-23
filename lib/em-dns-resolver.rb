@@ -6,6 +6,8 @@ module EventMachine
     ##
     # Global interface
     ##
+    
+    Port = 53
 
     def self.resolve(hostname)
       type = Resolv::DNS::Resource::IN::A
@@ -37,18 +39,19 @@ module EventMachine
       end
     end
 
-    def self.nameserver=(ns)
-      @nameserver = ns
+    def self.nameserver_port= (ns_p)
+      @nameserver_port = ns_p
     end
-    def self.nameserver
-      unless defined?(@nameserver)
-        IO::readlines('/etc/resolv.conf').each do |line|
-          if line =~ /^nameserver\s+(.+)$/
-            @nameserver = $1.split(/\s+/).first
-          end
-        end
+    def self.nameserver_port
+      return @nameserver_port if defined? @nameserver_port
+      config_hash = ::Resolv::DNS::Config.default_config_hash
+      @nameserver_port = if config_hash.include? :nameserver
+        [ config_hash[:nameserver].first, Port ]
+      elsif config_hash.include? :nameserver_port
+        config_hash[:nameserver_port].first
+      else
+        [ '0.0.0.0', Port ]
       end
-      @nameserver
     end
 
     ##
@@ -81,13 +84,13 @@ module EventMachine
         end
       end
       def send_packet(pkt)
-        send_datagram(pkt, nameserver, 53)
+        send_datagram pkt, *nameserver_port
       end
-      def nameserver=(ns)
-        @nameserver = ns
+      def nameserver_port= (ns_p)
+        @nameserver_port = ns_p
       end
-      def nameserver
-        @nameserver ||= DnsResolver.nameserver
+      def nameserver_port
+        @nameserver_port ||= DnsResolver.nameserver_port
       end
       # Decodes the packet, looks for the request and passes the
       # response over to the requester
