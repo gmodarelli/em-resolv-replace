@@ -11,28 +11,32 @@ class Resolv
   alias :orig_getaddress :getaddress
 
   def getaddress(host)
-    EM.reactor_running? ? em_getaddresses(host)[0] : orig_getaddress(host)
+    event_machine? ? em_getaddresses(host)[0] : orig_getaddress(host)
   end
 
   alias :orig_getaddresses :getaddresses
 
   def getaddresses(host)
-    EM.reactor_running? ? em_getaddresses(host) : orig_getaddresses(host)
+    event_machine? ? em_getaddresses(host) : orig_getaddresses(host)
   end
 
   alias :orig_getname :getname
 
   def getname(address)
-    EM.reactor_running? ? em_getnames(address)[0] : orig_getname(address)
+    event_machine? ? em_getnames(address)[0] : orig_getname(address)
   end
 
   alias :orig_getnames :getnames
 
   def getnames(address)
-    EM.reactor_running? ? em_getnames(address) : orig_getnames(address)
+    event_machine? ? em_getnames(address) : orig_getnames(address)
   end
 
   private
+
+  def event_machine?
+    EM.reactor_running? && EM.reactor_thread?
+  end
 
   def em_getaddresses(host)
     em_request(host, :each_address, :resolve)
