@@ -6,8 +6,10 @@ module EventMachine
     ##
     # Global interface
     ##
-    
+
     Port = 53
+    MAX_TRIES = 5
+    RETRY_INTERVAL = 3
 
     def self.resolve(hostname)
       type = Resolv::DNS::Resource::IN::A
@@ -39,19 +41,19 @@ module EventMachine
       end
     end
 
-    def self.nameserver_port= (ns_p)
-      @nameserver_port = ns_p
-    end
-    def self.nameserver_port
-      return @nameserver_port if defined? @nameserver_port
+    def self.nameservers
+      return @nameservers if defined? @nameservers
       config_hash = ::Resolv::DNS::Config.default_config_hash
-      @nameserver_port = if config_hash.include? :nameserver
-        [ config_hash[:nameserver].first, Port ]
-      elsif config_hash.include? :nameserver_port
-        config_hash[:nameserver_port].first
-      else
-        [ '0.0.0.0', Port ]
-      end
+
+      @nameservers = if config_hash.include? :nameserver
+                       config_hash[:nameserver].map do |ns|
+                         [ ns, Port ]
+                       end
+                     elsif config_hash.include? :nameserver_port
+                       config_hash[:nameserver_port]
+                     else
+                       [ '0.0.0.0', Port ]
+                     end
     end
 
     ##
@@ -83,7 +85,7 @@ module EventMachine
           @requests[id] = req
         end
       end
-      def send_packet(pkt)
+      def send_packet(pkt, nameserver_port)
         send_datagram pkt, *nameserver_port
       end
       def nameserver_port= (ns_p)
@@ -127,8 +129,10 @@ module EventMachine
         @type = type
         @tries = 0
         @last_send = Time.at(0)
-        @retry_interval = 3
-        @max_tries = 5
+        @retry_interval = DnsResolver::RETRY_INTERVAL
+        @max_tries = DnsResolver::MAX_TRIES
+        @nameservers = DnsResolver.nameservers.dup
+        @nameserver  = @nameservers.shift
         EM.next_tick { tick }
       end
       def tick
@@ -142,7 +146,9 @@ module EventMachine
         return if @last_send + @retry_interval > Time.now
 
         if @tries < @max_tries
-          send
+          send(@nameserver)
+        elsif @nameserver = @nameservers.shift
+          @tries = 0
         else
           fail 'retries exceeded'
         end
@@ -165,8 +171,8 @@ module EventMachine
         end
       end
       private
-      def send
-        @socket.send_packet(packet.encode)
+      def send(nameserver_port)
+        @socket.send_packet(packet.encode, nameserver_port)
         @tries += 1
         @last_send = Time.now
       end
