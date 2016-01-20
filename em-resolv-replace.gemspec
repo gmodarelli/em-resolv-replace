@@ -32,7 +32,8 @@ Gem::Specification.new do |s|
      "test/test_em-resolv-replace.rb"
   ]
 
-  s.add_development_dependency(%q<shoulda>, [">= 0"])
-  s.add_development_dependency(%q<mocha>, [">= 0"])
+  s.add_development_dependency(%q<eventmachine>, [">= 0"])
+  s.add_development_dependency(%q<shoulda>, ["2.11.3"])
+  s.add_development_dependency(%q<mocha>, ["0.14.0"])
 end
 
